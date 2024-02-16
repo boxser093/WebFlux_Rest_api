@@ -24,5 +24,6 @@ CREATE TABLE events
 (
     id      int primary key auto_increment not null,
     user_id int references users (id) ON UPDATE CASCADE,
-    file_id int references files (id) ON UPDATE CASCADE
+    file_id int references files (id) ON UPDATE CASCADE,
+    status text
 );

@@ -1,38 +1,51 @@
 package net.ilya.restcontrollerv100.service.Impl;
 
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.amazonaws.services.s3.model.PutObjectResult;
+import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.ilya.restcontrollerv100.dto.FileDto;
-import net.ilya.restcontrollerv100.dto.UserDto;
+import net.ilya.restcontrollerv100.entity.EventEntity;
 import net.ilya.restcontrollerv100.entity.FileEntity;
 import net.ilya.restcontrollerv100.entity.StatusEntity;
+import net.ilya.restcontrollerv100.entity.UserEntity;
 import net.ilya.restcontrollerv100.mapper.FileMapper;
 import net.ilya.restcontrollerv100.repository.FileRepository;
+import net.ilya.restcontrollerv100.service.EventService;
 import net.ilya.restcontrollerv100.service.FileService;
+import net.ilya.restcontrollerv100.service.FileStorageService;
+import net.ilya.restcontrollerv100.service.UserService;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.io.IOException;
-import java.nio.file.FileAlreadyExistsException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
+import java.nio.file.*;
+import java.time.Duration;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class FileServiceImpl implements FileService {
+    private final FileStorageService fileStorageService;
     private final FileRepository fileRepository;
     private final FileMapper mapper;
+    private final EventService eventService;
+    private final AmazonS3 amazonS3;
+    private final UserService userService;
+
     @Value("${uploads.fileMaxSize}")
     private int fileMaxSize;
     @Value("${uploads.memMaxSize}")
     private int memMaxSize;
     @Value("${uploads.filePath}")
     private Path filePath;
+    @Value("${spring.cloud.aws.buckets.default}")
+    private String bucketName;
 
     private void init() {
         try {
@@ -41,20 +54,7 @@ public class FileServiceImpl implements FileService {
             throw new RuntimeException("Could not initialize folder for upload!");
         }
     }
-    private Path downloadFileToStorage(MultipartFile file){
-        Path fullResource;
-        try {
-            fullResource = Path.of(String.valueOf(this.filePath.resolve(file.getOriginalFilename())));
-            Files.copy(file.getInputStream(), this.filePath.resolve(file.getOriginalFilename()), StandardCopyOption.REPLACE_EXISTING);
 
-        } catch (Exception e) {
-            if (e instanceof FileAlreadyExistsException) {
-                throw new RuntimeException("A file of that name already exists.");
-            }
-            throw new RuntimeException(e.getMessage());
-        }
-        return fullResource;
-    }
     @Override
     public Mono<FileEntity> findById(Long aLong) {
         log.info("IN FileServiceImpl fineOneById {}", aLong);
@@ -66,18 +66,28 @@ public class FileServiceImpl implements FileService {
         return null;
     }
 
-
     @Override
-    public Mono<FileEntity> create(FileEntity fileEntity, MultipartFile file) {
-        log.info("IN FileServiceImpl save {}", fileEntity);
-        Path path = downloadFileToStorage(file);
-        return fileRepository.save(
-                fileEntity.toBuilder()
-                        .fileName(String.valueOf(path.getFileName()))
-                        .fileStatus(StatusEntity.ACTIVE)
-                        .build()
-        );
+    public Mono<FileEntity> create(Claims userClaims, Mono<FilePart> filePartMono) {
+        Mono<UserEntity> byId = userService.getUserByUsername(userClaims.get("username", String.class));
+        Mono<String> save = fileStorageService.save(filePartMono);
+        Mono<FileEntity> fileEntityMono = save.flatMap(u -> fileRepository.save(FileEntity.builder()
+                .fileName(u)
+                .filePath(filePath.toString())
+                .fileStatus(StatusEntity.ACTIVE)
+                .build()));
+        Mono<EventEntity> entityMono = Mono.zip(byId, fileEntityMono).flatMap(u -> {
+            Mono.just(amazonS3.putObject(new PutObjectRequest(bucketName, u.getT2().getFileName(), Path.of(filePath + "/" + u.getT2().getFileName()).toFile())))
+                    .subscribe(i -> log.info("FILE UPLOAD TO AMAZON - {}", i.getETag()));
+            return eventService.create(EventEntity.builder()
+                    .user(u.getT1())
+                    .file(u.getT2())
+                    .eventStatus(StatusEntity.ACTIVE)
+                    .build());
+        });
+        entityMono.subscribe(i -> log.info("$$$$$ NEW EVENT - {}", i));
+        return fileEntityMono;
     }
+
     @Override
     public Mono<FileEntity> update(FileEntity fileEntity) {
 

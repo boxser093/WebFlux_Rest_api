@@ -12,19 +12,21 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
-//@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
+@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class UserDto {
     private Long id;
     private String username;
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
     private UserRole role;
+    @JsonProperty("first_Name")
     private String firstName;
+    @JsonProperty("last_Name")
     private String lastName;
     private StatusEntity status;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-
-    private Flux<EventDto> eventDtoList;
+    @ToString.Include
+    private List<EventDto> eventEntityList;
 }

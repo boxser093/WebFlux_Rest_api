@@ -2,6 +2,7 @@ package net.ilya.restcontrollerv100.entity;
 
 import lombok.*;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.relational.core.mapping.Table;
 import reactor.core.publisher.Flux;
 
@@ -26,8 +27,8 @@ public class UserEntity {
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-
-    private Flux<EventEntity> eventEntityList;
+    @Transient
+    private List<EventEntity> eventEntityList;
     @ToString.Include(name = "password")
     private String maskPassword(){
         return "********";

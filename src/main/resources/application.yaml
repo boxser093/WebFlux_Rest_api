@@ -11,6 +11,21 @@ spring:
     user: root
     password: 228228
     locations: classpath:db/migration
+  cloud:
+    aws:
+      credentials:
+        access-key: YCAJEBqVmQTdyFkoGLM03dCNq
+        secret-key: YCNIiKl2bjSTgQ9rMiLpih9powjKLcKJPeTbCJ4H
+      region:
+        static: ru-central1
+      cloudwatch:
+        endpoint: https://storage.yandexcloud.net
+      buckets:
+        default: rest-api-example-123
+  files:
+    directories:
+      uploads:
+        local: src/main/resources/uploads
 
 jwt:
   password:
@@ -22,11 +37,7 @@ jwt:
   expiration: 3600
   issuer: ilyap
 
-aws:
-
-
-
 uploads:
-  filePath: classpath:/uploads
+  filePath: src/main/resources/uploads
   fileMaxSize: 10240
   memMaxSize: 10240

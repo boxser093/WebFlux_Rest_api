@@ -35,7 +35,7 @@ public class AppErrorAttributes extends DefaultErrorAttributes {
                 || error instanceof ExpiredJwtException || error instanceof SignatureException || error instanceof MalformedJwtException) {
             status = HttpStatus.UNAUTHORIZED;
             var errorMap = new LinkedHashMap<String, Object>();
-            errorMap.put("code", ((ApiException) error).getMessage());
+            errorMap.put("code", (error).getMessage());
             errorMap.put("message", error.getMessage());
             errorList.add(errorMap);
         } else if (error instanceof ApiException) {

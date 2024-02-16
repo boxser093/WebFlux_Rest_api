@@ -4,10 +4,13 @@ import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import lombok.Data;
 import net.ilya.restcontrollerv100.entity.FileEntity;
+import net.ilya.restcontrollerv100.entity.StatusEntity;
 import net.ilya.restcontrollerv100.entity.UserEntity;
 @Data
+@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class EventDto {
     private Long id;
     private UserEntity user;
     private FileEntity file;
+    private StatusEntity eventStatus;
 }

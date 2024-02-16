@@ -1,8 +1,10 @@
 package net.ilya.restcontrollerv100.security;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import net.ilya.restcontrollerv100.entity.StatusEntity;
 import net.ilya.restcontrollerv100.entity.UserEntity;
 import net.ilya.restcontrollerv100.exeption.AuthException;
@@ -12,7 +14,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
+import java.security.Key;
 import java.util.*;
+import java.util.function.Function;
 
 @Component
 @RequiredArgsConstructor
@@ -41,6 +45,18 @@ public class SecurityService {
         Date expirationDate = new Date(new Date().getTime() + expirationTimeInMillis);
 
         return generateToken(expirationDate, claims, subject);
+    }
+    ///
+    public Claims getClaims(String token){
+        String[] jwt = token.split(" ");
+        return Jwts.parser().setSigningKey(secret).parseClaimsJws(jwt[1]).getBody();
+    }
+    public Claims getClaimsFromToken(String token) {
+        String[] jwt = token.split(" ");
+        return Jwts.parser()
+                .setSigningKey(Base64.getEncoder().encodeToString(secret.getBytes()))
+                .parseClaimsJws(jwt[1])
+                .getBody();
     }
 
     private TokenDetails generateToken(Date expirationDate, Map<String, Object> claims, String subject) {

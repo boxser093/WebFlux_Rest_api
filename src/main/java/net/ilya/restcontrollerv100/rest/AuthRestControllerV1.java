@@ -2,6 +2,7 @@ package net.ilya.restcontrollerv100.rest;
 
 import lombok.RequiredArgsConstructor;
 
+import lombok.extern.slf4j.Slf4j;
 import net.ilya.restcontrollerv100.dto.AuthRequestDto;
 import net.ilya.restcontrollerv100.dto.AuthResponseDto;
 import net.ilya.restcontrollerv100.dto.UserDto;
@@ -12,6 +13,7 @@ import net.ilya.restcontrollerv100.service.Impl.UserServiceImpl;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 public class AuthRestControllerV1 {
@@ -22,6 +24,7 @@ public class AuthRestControllerV1 {
 
     @PostMapping("/api/v1/auth/register")
     public Mono<UserDto> register(@RequestBody UserDto dto) {
+        log.info("IN AuthRestControllerV1 input DTO:{}",dto);
         UserEntity entity = userMapper.map(dto);
         return userServiceImpl.registerUser(entity).map(userMapper::map);
     }

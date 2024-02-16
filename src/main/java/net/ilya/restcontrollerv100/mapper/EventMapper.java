@@ -14,4 +14,6 @@ public interface EventMapper {
     @InheritInverseConfiguration
     EventEntity map(EventDto eventDto);
 
+
+
 }

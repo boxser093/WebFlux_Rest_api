@@ -9,6 +9,7 @@ import net.ilya.restcontrollerv100.entity.StatusEntity;
 import net.ilya.restcontrollerv100.mapper.EventMapper;
 import net.ilya.restcontrollerv100.repository.EventRepository;
 import net.ilya.restcontrollerv100.service.EventService;
+import org.springframework.data.r2dbc.repository.Query;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -19,6 +20,7 @@ import reactor.core.publisher.Mono;
 public class EventServiceImpl implements EventService {
     private final EventRepository eventRepository;
     private final EventMapper mapper;
+
     @Override
     public Mono<EventEntity> findById(Long aLong) {
         log.info("IN EventRepository findById {}", aLong);
