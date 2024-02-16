@@ -3,37 +3,37 @@ server:
 
 spring:
   r2dbc:
-    url: r2dbc:mysql://localhost:3306/restapireactive
-    username: root
-    password: 228228
+    url: ############################
+    username: #########
+    password: #########
   flyway:
-    url: jdbc:mysql://localhost:3306/restapireactive
-    user: root
-    password: 228228
-    locations: classpath:db/migration
+    url: #######################
+    user: ############################
+    password: ############################
+    locations: ############################
   cloud:
     aws:
       credentials:
-        access-key: YCAJEBqVmQTdyFkoGLM03dCNq
-        secret-key: YCNIiKl2bjSTgQ9rMiLpih9powjKLcKJPeTbCJ4H
+        access-key: ############
+        secret-key: ############
       region:
-        static: ru-central1
+        static: ############################
       cloudwatch:
-        endpoint: https://storage.yandexcloud.net
+        endpoint: ############################
       buckets:
-        default: rest-api-example-123
+        default: ###################
   files:
     directories:
       uploads:
-        local: src/main/resources/uploads
+        local: ############################
 
 jwt:
   password:
     encoder:
-      secret: FZK2DZ82odqS13e8aENggaMbb_fAkl-nJL4AEVBX43g
+      secret: #############################
       iteration: 64
       keylength: 256
-  secret: b5f59337a612a2a7dc07328f3e7d1a04722967c7f06df20a499a7d3f91ff2a7e
+  secret: ###################################
   expiration: 3600
   issuer: ilyap
 
