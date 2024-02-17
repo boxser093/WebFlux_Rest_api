@@ -27,6 +27,5 @@ public class UserDto {
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    @ToString.Include
-    private List<EventDto> eventEntityList;
+    private EventDto eventDto;
 }

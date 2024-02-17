@@ -73,18 +73,18 @@ public class FileServiceImpl implements FileService {
         Mono<FileEntity> fileEntityMono = save.flatMap(u -> fileRepository.save(FileEntity.builder()
                 .fileName(u)
                 .filePath(filePath.toString())
-                .fileStatus(StatusEntity.ACTIVE)
+                .status(StatusEntity.ACTIVE)
                 .build()));
-        Mono<EventEntity> entityMono = Mono.zip(byId, fileEntityMono).flatMap(u -> {
+        Mono.zip(byId, fileEntityMono).flatMap(u -> {
             Mono.just(amazonS3.putObject(new PutObjectRequest(bucketName, u.getT2().getFileName(), Path.of(filePath + "/" + u.getT2().getFileName()).toFile())))
                     .subscribe(i -> log.info("FILE UPLOAD TO AMAZON - {}", i.getETag()));
-            return eventService.create(EventEntity.builder()
-                    .user(u.getT1())
-                    .file(u.getT2())
-                    .eventStatus(StatusEntity.ACTIVE)
-                    .build());
-        });
-        entityMono.subscribe(i -> log.info("$$$$$ NEW EVENT - {}", i));
+            EventEntity build = EventEntity.builder()
+                    .userEntity(u.getT1())
+                    .fileEntity(u.getT2())
+                    .build();
+            log.info("$$$ IN FileServiceImpl create EventEntity - {}", build);
+            return eventService.create(build);
+        }).subscribe(i -> log.info("$$$$$ NEW EVENT - {}", i));
         return fileEntityMono;
     }
 
@@ -93,7 +93,7 @@ public class FileServiceImpl implements FileService {
 
         return fileRepository.findById(fileEntity.getId())
                 .map(fileEntity1 -> fileEntity1.toBuilder()
-                        .fileStatus(StatusEntity.UPGRADE)
+                        .status(StatusEntity.UPGRADE)
                         .fileName(fileEntity.getFileName())
                         .filePath(fileEntity.getFilePath())
                         .build())
@@ -105,7 +105,7 @@ public class FileServiceImpl implements FileService {
         log.info("IN FileServiceImpl delete {}", aLong);
         return fileRepository.findById(aLong)
                 .map(fileEntity -> fileEntity.toBuilder()
-                        .fileStatus(StatusEntity.DELETED)
+                        .status(StatusEntity.DELETED)
                         .build())
                 .flatMap(fileRepository::save);
     }

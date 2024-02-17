@@ -5,9 +5,13 @@ import lombok.extern.slf4j.Slf4j;
 import net.ilya.restcontrollerv100.dto.EventDto;
 import net.ilya.restcontrollerv100.dto.UserDto;
 import net.ilya.restcontrollerv100.entity.EventEntity;
+import net.ilya.restcontrollerv100.entity.FileEntity;
 import net.ilya.restcontrollerv100.entity.StatusEntity;
+import net.ilya.restcontrollerv100.entity.UserEntity;
 import net.ilya.restcontrollerv100.mapper.EventMapper;
 import net.ilya.restcontrollerv100.repository.EventRepository;
+import net.ilya.restcontrollerv100.repository.FileRepository;
+import net.ilya.restcontrollerv100.repository.UserRepository;
 import net.ilya.restcontrollerv100.service.EventService;
 import org.springframework.data.r2dbc.repository.Query;
 import org.springframework.stereotype.Service;
@@ -20,20 +24,23 @@ import reactor.core.publisher.Mono;
 public class EventServiceImpl implements EventService {
     private final EventRepository eventRepository;
     private final EventMapper mapper;
+    private final FileRepository fileRepository;
+    private final UserRepository userRepository;
 
     @Override
     public Mono<EventEntity> findById(Long aLong) {
-        log.info("IN EventRepository findById {}", aLong);
         return eventRepository.findById(aLong);
     }
 
     @Override
     public Mono<EventEntity> create(EventEntity eventEntity) {
-        log.info("IN EventRepository create {}", eventEntity);
-        return eventRepository.save(
-                eventEntity.toBuilder()
-                        .eventStatus(StatusEntity.ACTIVE)
-                        .build());
+        EventEntity build = eventEntity.toBuilder()
+                .status(StatusEntity.ACTIVE)
+                .fileId(eventEntity.getFileEntity().getId())
+                .userId(eventEntity.getUserEntity().getId())
+                .build();
+        log.info("IN EventServiceImpl create {}", build);
+        return eventRepository.save(build);
     }
 
     @Override
@@ -41,9 +48,9 @@ public class EventServiceImpl implements EventService {
         log.info("IN EventRepository update {}", eventEntity);
         return eventRepository.findById(eventEntity.getId())
                 .map(eventEntity1 -> eventEntity1.toBuilder()
-                        .eventStatus(StatusEntity.UPGRADE)
-                        .file(eventEntity.getFile())
-                        .user(eventEntity.getUser())
+                        .status(StatusEntity.UPGRADE)
+                        .fileId(eventEntity.getFileEntity().getId())
+                        .userId(eventEntity.getUserEntity().getId())
                         .build())
                 .flatMap(eventRepository::save);
     }
@@ -53,7 +60,7 @@ public class EventServiceImpl implements EventService {
         log.info("IN EventRepository delete {}", aLong);
         return eventRepository.findById(aLong)
                 .map(eventEntity -> eventEntity.toBuilder()
-                        .eventStatus(StatusEntity.DELETED)
+                        .status(StatusEntity.DELETED)
                         .build())
                 .flatMap(eventRepository::save);
     }

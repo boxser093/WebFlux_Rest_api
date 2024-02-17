@@ -27,7 +27,9 @@ public class UserEntity {
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
     @Transient
+    @ToString.Exclude
     private List<EventEntity> eventEntityList;
     @ToString.Include(name = "password")
     private String maskPassword(){

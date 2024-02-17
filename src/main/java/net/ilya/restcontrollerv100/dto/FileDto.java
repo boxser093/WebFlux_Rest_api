@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import lombok.Data;
 import net.ilya.restcontrollerv100.entity.StatusEntity;
 
+import java.util.List;
+
 @Data
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class FileDto {
@@ -14,5 +16,6 @@ public class FileDto {
     private String fileName;
     @JsonProperty("file_Path")
     private String filePath;
-    private StatusEntity fileStatus;
+    private StatusEntity status;
+    private List<EventDto> eventDto;
 }

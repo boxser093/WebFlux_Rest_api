@@ -1,25 +1,33 @@
 package net.ilya.restcontrollerv100.entity;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 @Builder(toBuilder = true)
 @Table("events")
 public class EventEntity {
+
     @Id
     private Long id;
-    @Column("user_id")
-    private UserEntity user;
-    @Column("file_id")
-    private FileEntity file;
+    @Column("userId")
+    private Long userId;
+    @Column("fileId")
+    private Long fileId;
     @Column("status")
-    private StatusEntity eventStatus;
+    private StatusEntity status;
+
+    @Getter
+    @Transient
+    @ToString.Exclude
+    private UserEntity userEntity;
+    @Getter
+    @Transient
+    @ToString.Exclude
+    private FileEntity fileEntity;
 }
