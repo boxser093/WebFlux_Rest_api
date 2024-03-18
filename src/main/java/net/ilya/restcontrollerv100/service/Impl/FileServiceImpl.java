@@ -2,7 +2,6 @@ package net.ilya.restcontrollerv100.service.Impl;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.PutObjectRequest;
-import com.amazonaws.services.s3.model.PutObjectResult;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,9 +22,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.io.IOException;
 import java.nio.file.*;
-import java.time.Duration;
 
 @Slf4j
 @Service
@@ -35,25 +32,13 @@ public class FileServiceImpl implements FileService {
     private final FileRepository fileRepository;
     private final FileMapper mapper;
     private final EventService eventService;
-    private final AmazonS3 amazonS3;
     private final UserService userService;
+    private final AmazonS3 amazonS3;
 
-    @Value("${uploads.fileMaxSize}")
-    private int fileMaxSize;
-    @Value("${uploads.memMaxSize}")
-    private int memMaxSize;
     @Value("${uploads.filePath}")
     private Path filePath;
     @Value("${spring.cloud.aws.buckets.default}")
     private String bucketName;
-
-    private void init() {
-        try {
-            Files.createDirectories(filePath);
-        } catch (IOException e) {
-            throw new RuntimeException("Could not initialize folder for upload!");
-        }
-    }
 
     @Override
     public Mono<FileEntity> findById(Long aLong) {
@@ -63,28 +48,35 @@ public class FileServiceImpl implements FileService {
 
     @Override
     public Mono<FileEntity> create(FileEntity fileEntity) {
-        return null;
+        return fileRepository.save(fileEntity.toBuilder()
+                .status(StatusEntity.ACTIVE)
+                .build());
     }
 
     @Override
     public Mono<FileEntity> create(Claims userClaims, Mono<FilePart> filePartMono) {
         Mono<UserEntity> byId = userService.getUserByUsername(userClaims.get("username", String.class));
-        Mono<String> save = fileStorageService.save(filePartMono);
-        Mono<FileEntity> fileEntityMono = save.flatMap(u -> fileRepository.save(FileEntity.builder()
+        Mono<String> saveFile = fileStorageService.save(filePartMono);
+        Mono<FileEntity> fileEntityMono = saveFile.flatMap(u -> fileRepository.save(FileEntity.builder()
                 .fileName(u)
                 .filePath(filePath.toString())
                 .status(StatusEntity.ACTIVE)
                 .build()));
-        Mono.zip(byId, fileEntityMono).flatMap(u -> {
+        Mono<EventEntity> monoEventEmpty = Mono.just(EventEntity.builder().build());
+        Mono.zip(byId, fileEntityMono,monoEventEmpty).flatMap(u -> {
             Mono.just(amazonS3.putObject(new PutObjectRequest(bucketName, u.getT2().getFileName(), Path.of(filePath + "/" + u.getT2().getFileName()).toFile())))
                     .subscribe(i -> log.info("FILE UPLOAD TO AMAZON - {}", i.getETag()));
-            EventEntity build = EventEntity.builder()
+            log.info("$$$ IN FileServiceImpl create  - user ID - {}, file ID - {}",u.getT1().getId(),u.getT2().getId());
+            EventEntity build = u.getT3().toBuilder()
                     .userEntity(u.getT1())
                     .fileEntity(u.getT2())
+                    .fileId(u.getT2().getId())
+                    .userId(u.getT2().getId())
                     .build();
             log.info("$$$ IN FileServiceImpl create EventEntity - {}", build);
             return eventService.create(build);
-        }).subscribe(i -> log.info("$$$$$ NEW EVENT - {}", i));
+        });
+
         return fileEntityMono;
     }
 

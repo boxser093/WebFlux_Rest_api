@@ -5,8 +5,6 @@ import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
-import com.amazonaws.services.sqs.AmazonSQSAsync;
-import com.amazonaws.services.sqs.AmazonSQSAsyncClientBuilder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -40,11 +38,3 @@ public class AwsConfig {
                 .build();
     }
 }
-
-//    public AmazonSQSAsync amazonSQSAsync(AWSCredentialsProvider awsCredentialsProvider, @Value("${spring.cloud.aws.cloudwatch.endpoint}") String serviceEndpoint,
-//                                         @Value("${spring.cloud.aws.region.static}") String workRegion) {
-//        return AmazonSQSAsyncClientBuilder.standard()
-//                .withCredentials(awsCredentialsProvider)
-//                .withEndpointConfiguration(new AmazonS3ClientBuilder.EndpointConfiguration(serviceEndpoint, workRegion))
-//                .build();
-//    }

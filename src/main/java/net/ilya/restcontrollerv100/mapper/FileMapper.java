@@ -4,7 +4,7 @@ import net.ilya.restcontrollerv100.dto.FileDto;
 import net.ilya.restcontrollerv100.entity.FileEntity;
 import org.mapstruct.InheritInverseConfiguration;
 import org.mapstruct.Mapper;
-import reactor.core.publisher.Flux;
+import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
 public interface FileMapper {

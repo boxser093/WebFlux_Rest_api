@@ -27,3 +27,6 @@ CREATE TABLE test_bd_for_rest.events
     fileId int  not null references files (id) ON UPDATE CASCADE,
     status text not null
 );
+
+insert into test_bd_for_rest.users(username, password, role, first_name, last_name, status, created_at, updated_at, eventid)
+values ('admin', 'N1/RcZnu10TiUEhNbk4wMsPjiz1CO8kuSi39r/i+Gkw=', 'ADMIN','John', 'Cena', 'ACTIVE', '2024-03-04 14:30:44', '2024-03-04 14:30:44', null);

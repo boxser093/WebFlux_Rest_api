@@ -1,11 +1,9 @@
 package net.ilya.restcontrollerv100.entity;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.relational.core.mapping.Column;
-import org.springframework.data.relational.core.mapping.InsertOnlyProperty;
 import org.springframework.data.relational.core.mapping.Table;
 
 @Data
@@ -24,5 +22,5 @@ public class FileEntity {
     private StatusEntity status;
     @Transient
     @ToString.Exclude
-    private EventEntity entity;
+    private EventEntity eventEntity;
 }

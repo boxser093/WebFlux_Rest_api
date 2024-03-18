@@ -1,5 +1,8 @@
 package net.ilya.restcontrollerv100.config;
 
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
+import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import lombok.extern.slf4j.Slf4j;
 import net.ilya.restcontrollerv100.security.AuthenticationManager;
 import net.ilya.restcontrollerv100.security.BearerTokenAuthenticationConverter;
@@ -26,7 +29,7 @@ public class WebSecurityConfig {
     @Value("${jwt.secret}")
     private String secret;
 
-    private final String[] publicRoutes = {"/api/v1/auth/register", "/api/v1/auth/login"};
+    private final String[] publicRoutes = {"/api/v1/auth/*", "/webjars/swagger-ui/*", "/v3/api-docs/*","/v3/api-docs*", "/documentation/swagger-ui/*", "/documentation/swagger-resources/*"};
 
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http, AuthenticationManager authenticationManager) {
@@ -41,7 +44,7 @@ public class WebSecurityConfig {
                 .authenticated()
                 .and()
                 .exceptionHandling()
-                .authenticationEntryPoint((swe , e) -> {
+                .authenticationEntryPoint((swe, e) -> {
                     log.error("IN securityWebFilterChain - unauthorized error: {}", e.getMessage());
                     return Mono.fromRunnable(() -> swe.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED));
                 })

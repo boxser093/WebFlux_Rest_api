@@ -1,6 +1,5 @@
 package net.ilya.restcontrollerv100.service;
 
-import net.ilya.restcontrollerv100.dto.UserDto;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 

@@ -24,10 +24,8 @@ public class EventEntity {
 
     @Getter
     @Transient
-    @ToString.Exclude
     private UserEntity userEntity;
     @Getter
     @Transient
-    @ToString.Exclude
     private FileEntity fileEntity;
 }

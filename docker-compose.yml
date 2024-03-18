@@ -1,0 +1,23 @@
+version: '1'
+
+services:
+  rest-controller-v1.0.0:
+    image: rest-controller-v1.0.0:first
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - ILYAS_R2DBC_URL=r2dbc:pool:mysql://host.docker.internal:3306/restapireactive
+      - ILYAS_R2DBC_USER=[PUT_YOU_DB_LOGIN]
+      - ILYAS_R2DBC_PASSWORD=[PUT_YOU_DB_CODE]
+      - ILYAS_DB_URL=jdbc:mysql://host.docker.internal:3306/restapireactive
+      - ILYAS_DB_USER=[PUT_YOU_DB_LOGIN]
+      - ILYAS_DB_PASSWORD=[PUT_YOU_DB_CODE]
+      - ILYAS_AWS_ACCESS_KEY=[PUT_YOUR_ACCESS_KEY]
+      - ILYAS_AWS_SECRET_KEY=[PUT_YOUR_SECRET_KEY]
+      - ILYAS_AWS_REGION=ru-central1
+    deploy:
+      mode: replicated
+      replicas: 3

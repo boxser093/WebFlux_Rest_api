@@ -3,26 +3,32 @@ package net.ilya.restcontrollerv100.service.Impl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.ilya.restcontrollerv100.dto.UserDto;
-import net.ilya.restcontrollerv100.entity.StatusEntity;
-import net.ilya.restcontrollerv100.entity.UserEntity;
-import net.ilya.restcontrollerv100.entity.UserRole;
+import net.ilya.restcontrollerv100.entity.*;
 import net.ilya.restcontrollerv100.mapper.UserMapper;
+import net.ilya.restcontrollerv100.repository.EventRepository;
+import net.ilya.restcontrollerv100.repository.FileRepository;
 import net.ilya.restcontrollerv100.repository.UserRepository;
 import net.ilya.restcontrollerv100.service.UserService;
+import org.springframework.security.core.parameters.P;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
-
+    private final EventRepository eventRepository;
+    private final FileRepository fileRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+
     private final UserMapper mapper;
 
     @Override
@@ -31,14 +37,33 @@ public class UserServiceImpl implements UserService {
         return userRepository.findById(aLong);
     }
 
+    public Mono<UserEntity> findByIdWithEvents(Long aLong) {
+        Mono<List<EventEntity>> listEvents = eventRepository.findAll().filter(x -> x.getUserId().equals(aLong) && !x.getStatus().equals(StatusEntity.DELETED)).collectList();
+        Mono<List<FileEntity>> listFiles = fileRepository.findAll().filter(x -> !x.getStatus().equals(StatusEntity.DELETED)).collectList();
+        Mono<UserEntity> userEntityMono = userRepository.findById(aLong);
+        return Mono.zip(listEvents, listFiles, userEntityMono).flatMap(t -> {
+            List<EventEntity> t1 = t.getT1();
+            List<FileEntity> t2 = t.getT2();
+            UserEntity t3 = t.getT3();
+            for (EventEntity eventEntity : t1) {
+                for (FileEntity fileEntity : t2) {
+                    if (eventEntity.getFileId().equals(fileEntity.getId())) {
+                        eventEntity.setFileEntity(fileEntity);
+                        eventEntity.setUserEntity(t3);
+                    }
+                }
+            }
+            return Mono.just(t3.toBuilder()
+                    .eventEntityList(t1)
+                    .build());
+        });
+    }
+
+
     @Override
     public Mono<UserEntity> create(UserEntity user) {
         return userRepository.save(user.toBuilder()
-                .username(user.getUsername())
                 .password(passwordEncoder.encode(user.getPassword()))
-                .role(user.getRole())
-                .firstName(user.getFirstName())
-                .lastName(user.getLastName())
                 .status(StatusEntity.ACTIVE)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
@@ -69,10 +94,10 @@ public class UserServiceImpl implements UserService {
     public Mono<UserEntity> delete(Long aLong) {
         log.info("IN UserServiceImpl delete {}", aLong);
         return userRepository.findById(aLong)
-                .map(user -> UserEntity.builder()
-                        .status(StatusEntity.DELETED)
-                        .updatedAt(LocalDateTime.now())
-                        .build())
+                .map(user -> {
+                    user.setStatus(StatusEntity.DELETED);
+                    return user;
+                })
                 .flatMap(userRepository::save).doOnSuccess(
                         user -> {
                             log.info("IN UserServiceImpl - user: {} deleted", user);
@@ -82,28 +107,24 @@ public class UserServiceImpl implements UserService {
     @Override
     public Flux<UserDto> findAll() {
         log.info("IN UserServiceImpl findAll");
-        Flux<UserEntity> all = userRepository.findAll();
-        Flux<UserDto> result = Flux.from(all.map(mapper::map));
-        return result;
+        return Flux.from(userRepository.findAll().map(mapper::map));
     }
 
     @Override
-    public Mono<UserEntity> registerUser(UserEntity user) {
-        return userRepository.save(
-                user.toBuilder()
-                        .password(passwordEncoder.encode(user.getPassword()))
-                        .role(UserRole.USER)
-                        .status(StatusEntity.ACTIVE)
-                        .createdAt(LocalDateTime.now())
-                        .updatedAt(LocalDateTime.now())
-                        .build()
-        ).doOnSuccess(u -> {
-            log.info("IN registerUser - user: {} created", u);
-        });
+     public Mono<UserEntity> registerUser(UserEntity user) {
+        UserEntity build = user.toBuilder()
+                .password(passwordEncoder.encode(user.getPassword()))
+                .role(UserRole.USER)
+                .status(StatusEntity.ACTIVE)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
+        log.info("IN UserServiceImpl in register - {}", build);
+        return userRepository.save(build);
     }
 
     @Override
     public Mono<UserEntity> getUserByUsername(String username) {
-        return userRepository.findByUsername(username);
+        return userRepository.findUserEntitiesByUsername(username);
     }
 }
