@@ -1,0 +1,50 @@
+spring:
+  profiles:
+    active: test
+  r2dbc:
+    url: r2dbc:mysql://localhost:3306/test_bd_for_rest
+    username: root
+    password: 228228
+  flyway:
+    url: jdbc:mysql://localhost:3306/test_bd_for_rest
+    locations: src/test/resources/db/migration/
+    user: root
+    password: 228228
+
+
+#    placeholder-prefix: R
+  #    baseline-version: 0.0
+#    enabled: true
+#    baselineOnMigrate: true
+#    table: {test_bd_for_rest.files, test_bd_for_rest.users, test_bd_for_rest.events}
+
+  cloud:
+    aws:
+      credentials:
+        access-key: YCAJESmpbBjFP3O0toot0lRUA
+        secret-key: YCO8hiqw3MOd80SUW3Pmu7PBNb0jicF8Gzn4VD2Q
+      region:
+        static: ru-central1
+      cloudwatch:
+        endpoint: https://storage.yandexcloud.net
+      buckets:
+        default: backed-for-tests
+    files:
+      directories:
+        uploads:
+          local: src/test/resources/uploads
+
+jwt:
+  password:
+    encoder:
+      secret: FZK2DZ82odqS13e8aENggaMbb_fAkl-nJL4AEVBX43g
+      iteration: 64
+      keylength: 256
+  secret: b5f59337a612a2a7dc07328f3e7d1a04722967c7f06df20a499a7d3f91ff2a7e
+  expiration: 3600
+  issuer: ilyap
+
+uploads:
+  filePath: src/test/resources/uploads
+  fileMaxSize: 10240
+  memMaxSize: 10240
